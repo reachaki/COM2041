@@ -1,0 +1,6 @@
+# Ignore SSH keys
+id_rsa
+id_rsa.pub
+id_rsa_github
+id_rsa_github.pub
+
