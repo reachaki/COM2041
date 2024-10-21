@@ -14,196 +14,147 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class myAESCipher {
-	Cipher ecipher;  // AES encryption cipher
-	Cipher dcipher;  // AES decryption cipher 	
-	
-	myAESCipher(byte[] keyBytes, byte[] ivBytes){
+	Cipher ecipher; // AES encryption cipher
+	Cipher dcipher; // AES decryption cipher
+
+	// Constructor for CBC mode
+	myAESCipher(byte[] keyBytes, byte[] ivBytes) {
 		SecretKey key = new SecretKeySpec(keyBytes, "AES");
 		IvParameterSpec iv = new IvParameterSpec(ivBytes);
-		try{
+		try {
 			ecipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 			dcipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			ecipher.init(Cipher.ENCRYPT_MODE,key,iv);
-			dcipher.init(Cipher.DECRYPT_MODE,key,iv);
-		}
-		catch (InvalidKeyException e){
-			e.printStackTrace();		
-		}
-		catch (NoSuchAlgorithmException e){
-			e.printStackTrace();
-		}
-		catch (NoSuchPaddingException e){
-			e.printStackTrace();
-		} 
-		catch (InvalidAlgorithmParameterException e){			
+			ecipher.init(Cipher.ENCRYPT_MODE, key, iv);
+			dcipher.init(Cipher.DECRYPT_MODE, key, iv);
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
+				| InvalidAlgorithmParameterException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	myAESCipher(byte[] keybytes){
+
+	// Constructor for ECB mode
+	myAESCipher(byte[] keybytes) {
 		SecretKey key = new SecretKeySpec(keybytes, "AES");
-		try{
+		try {
 			ecipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 			dcipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-			ecipher.init(Cipher.ENCRYPT_MODE,key);
-			dcipher.init(Cipher.DECRYPT_MODE,key);	
-
+			ecipher.init(Cipher.ENCRYPT_MODE, key);
+			dcipher.init(Cipher.DECRYPT_MODE, key);
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
+			e.printStackTrace();
 		}
-		catch (InvalidKeyException e){
-		}
-		catch (NoSuchAlgorithmException e){
-		}
-		catch (NoSuchPaddingException e){
-		} 
-	 }
+	}
 
-
-	public byte[] encrypt(byte[] databytes){
+	// Encrypts the input data
+	public byte[] encrypt(byte[] databytes) {
 		byte[] enc = null;
-		try{
-		enc = ecipher.doFinal(databytes);
-		}
-		catch (IllegalBlockSizeException e){
-		}
-		catch (BadPaddingException e){
+		try {
+			enc = ecipher.doFinal(databytes);
+		} catch (IllegalBlockSizeException | BadPaddingException e) {
+			e.printStackTrace();
 		}
 		return enc;
 	}
 
-	public byte[] decrypt(byte[] databytes){
+	// Decrypts the input data
+	public byte[] decrypt(byte[] databytes) {
 		byte[] dec = null;
-		try{
+		try {
 			dec = dcipher.doFinal(databytes);
-		}
-		catch (IllegalBlockSizeException e){
-		}
-		catch (BadPaddingException e){
-//			e.printStackTrace();
+		} catch (IllegalBlockSizeException | BadPaddingException e) {
+			e.printStackTrace();
 		}
 		return dec;
 	}
-	
-	public boolean paddingQuery(byte[] databytes){
-		try{
-		dcipher.doFinal(databytes);
-		}
-		catch (IllegalBlockSizeException e){
-		}
-		catch (BadPaddingException e){
+
+	// Checks if padding is correct
+	public boolean paddingQuery(byte[] databytes) {
+		try {
+			dcipher.doFinal(databytes);
+		} catch (IllegalBlockSizeException e) {
+			return false;
+		} catch (BadPaddingException e) {
 			return false;
 		}
 		return true;
 	}
-	
-	public static boolean printable(byte[] databytes){
-		int currentByte;
-		int len = databytes.length;
-		for(int i = 0; i < len-1; i++){
-			currentByte = (int) databytes[i];
-			if (currentByte<32||currentByte>127){return false;}
+
+	// Checks if the decrypted bytes are printable ASCII characters
+	public static boolean printable(byte[] databytes) {
+		for (byte b : databytes) {
+			if (b < 32 || b > 126) { // 32 to 126 are printable ASCII
+				return false;
+			}
 		}
 		return true;
 	}
 
-	
-	public static void bruteForce1(
-			byte[] keybytes, // the last byte may have been changed
-			byte[] ciphertext // the ciphertext to be brute forced
-				) {
-
+	// Brute force search for the last byte of the key
+	public static void bruteForce1(byte[] keybytes, byte[] ciphertext) {
 		boolean answer;
 		byte[] possiblePlain;
-		
-		int count = 0;
-				for(int k = 0 ; k < 256 ; k++){
-					keybytes[15] = (byte) k;
-					myAESCipher dc = new myAESCipher(keybytes);
-					answer = dc.paddingQuery(ciphertext);
-					if (answer){
-						System.out.println("here");
-						count++;
-						possiblePlain = dc.decrypt(ciphertext);
-						if (myAESCipher.printable(possiblePlain)){
-//							System.out.println("Possible decryption: "+DatatypeConverter.printHexBinary(possiblePlain));
-							String text = new String(possiblePlain);
-							System.out.print("Possible decryption: "+text);
-//							System.out.println("    Key = "+ DatatypeConverter.printHexBinary(keybytes));
-							System.out.println("    Key = "+ new BigInteger(1, keybytes).toString(16).toUpperCase());
-							}
-						}
-					
-//			System.out.println("count ="+count);
-		}
-	 }
 
-	public static void bruteForce2(
-			byte[] keybytes, // the last 2 bytes may have been changed
-			byte[] ciphertext // the ciphertext to be brute forced
-				) {
-
-		boolean answer;
-		byte[] possiblePlain;
-		
-		int count = 0;
-			for(int j = 0 ; j < 256 ; j++){
-				keybytes[14] = (byte) j;
-				for(int k = 0 ; k < 256 ; k++){
-					keybytes[15] = (byte) k;
-					myAESCipher dc = new myAESCipher(keybytes);
-					answer = dc.paddingQuery(ciphertext);
-					if (answer){
-						count++;
-						possiblePlain = dc.decrypt(ciphertext);
-						if (myAESCipher.printable(possiblePlain)){
-//							System.out.println("Possible decryption: "+DatatypeConverter.printHexBinary(possiblePlain));
-							String text = new String(possiblePlain);
-							System.out.print("Possible decryption: "+text);
-//							System.out.println("    Key = "+ DatatypeConverter.printHexBinary(keybytes));
-							System.out.println("    Key = "+ new BigInteger(1, keybytes).toString(16).toUpperCase());
-							}
-						}
-					
+		for (int k = 0; k < 256; k++) {
+			keybytes[15] = (byte) k; // Change the last byte
+			myAESCipher dc = new myAESCipher(keybytes);
+			answer = dc.paddingQuery(ciphertext);
+			if (answer) {
+				possiblePlain = dc.decrypt(ciphertext);
+				if (printable(possiblePlain)) {
+					String text = new String(possiblePlain);
+					System.out.println("Possible decryption: " + text);
+					System.out.println("    Key = " + new BigInteger(1, keybytes).toString(16).toUpperCase());
 				}
 			}
-//			System.out.println("count ="+count);
-	 }
-	
-	
-	
-	public static void bruteForce3(
-			byte[] keybytes, // the last 3 bytes may have been changed
-			byte[] ciphertext // the ciphertext to be brute forced
-				) {
+		}
+	}
 
+	// Brute force search for the last 2 bytes of the key
+	public static void bruteForce2(byte[] keybytes, byte[] ciphertext) {
 		boolean answer;
 		byte[] possiblePlain;
-		
-		int count = 0;
-		for(int i=0 ; i<256 ; i++){
-		    keybytes[13] = (byte) i;	
-			for(int j = 0 ; j < 256 ; j++){
-				keybytes[14] = (byte) j;
-				for(int k = 0 ; k < 256 ; k++){
-					keybytes[15] = (byte) k;
-					myAESCipher dc = new myAESCipher(keybytes);
-					answer = dc.paddingQuery(ciphertext);
-					if (answer){
-						count++;
-						possiblePlain = dc.decrypt(ciphertext);
-						if (myAESCipher.printable(possiblePlain)){
-//							System.out.println("Possible decryption: "+DatatypeConverter.printHexBinary(possiblePlain));
-							String text = new String(possiblePlain);
-							System.out.print("Possible decryption: "+text);
-//							System.out.println("    Key = "+ DatatypeConverter.printHexBinary(keybytes));
-							System.out.println("    Key = "+ new BigInteger(1, keybytes).toString(16).toUpperCase());
-							}
-						}
-					
+
+		for (int j = 0; j < 256; j++) {
+			keybytes[14] = (byte) j; // Change the second last byte
+			for (int k = 0; k < 256; k++) {
+				keybytes[15] = (byte) k; // Change the last byte
+				myAESCipher dc = new myAESCipher(keybytes);
+				answer = dc.paddingQuery(ciphertext);
+				if (answer) {
+					possiblePlain = dc.decrypt(ciphertext);
+					if (printable(possiblePlain)) {
+						String text = new String(possiblePlain);
+						System.out.println("Possible decryption: " + text);
+						System.out.println("    Key = " + new BigInteger(1, keybytes).toString(16).toUpperCase());
+					}
 				}
 			}
-//			System.out.println("count ="+count);
 		}
-	 }
+	}
 
-	
+	// Brute force search for the last 3 bytes of the key
+	public static void bruteForce3(byte[] keybytes, byte[] ciphertext) {
+		boolean answer;
+		byte[] possiblePlain;
+
+		for (int i = 0; i < 256; i++) {
+			keybytes[13] = (byte) i; // Change the third last byte
+			for (int j = 0; j < 256; j++) {
+				keybytes[14] = (byte) j; // Change the second last byte
+				for (int k = 0; k < 256; k++) {
+					keybytes[15] = (byte) k; // Change the last byte
+					myAESCipher dc = new myAESCipher(keybytes);
+					answer = dc.paddingQuery(ciphertext);
+					if (answer) {
+						possiblePlain = dc.decrypt(ciphertext);
+						if (printable(possiblePlain)) {
+							String text = new String(possiblePlain);
+							System.out.println("Possible decryption: " + text);
+							System.out.println("    Key = " + new BigInteger(1, keybytes).toString(16).toUpperCase());
+						}
+					}
+				}
+			}
+		}
+	}
 }
