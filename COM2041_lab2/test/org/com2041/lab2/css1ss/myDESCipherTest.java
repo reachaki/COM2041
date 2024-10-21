@@ -3,9 +3,11 @@ package org.com2041.lab2.css1ss;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.Test; // JUnit 4 import
+import static org.junit.Assert.*; // JUnit 4 import
 
 public class myDESCipherTest {
 
@@ -16,23 +18,23 @@ public class myDESCipherTest {
 		byte[] plain;
 		byte[] keybytes;
 
-		// Generate key bytes from hex string
 		keybytes = new BigInteger("13579BDF02468ACE", 16).toByteArray();
 
-		String message = "Alphabet";
+		String message = "Alphabet"; // Updated to avoid issues with new String
 		myDESCipher dc = new myDESCipher(keybytes);
 		cipher = dc.encrypt(message.getBytes());
-		System.out.println("Encrypted message (hex): " + bytesToHex(cipher));
+		System.out.println("Encrypted message: " + new String(cipher));
 
-		// Expected output
-		byte[] expected = new BigInteger("5DEA6FA34EDDA339", 16).toByteArray();
-		assertTrue(Arrays.equals(cipher, expected), "Cipher does not match expected output");
+		byte[] ans = new BigInteger("5DEA6FA34EDDA339", 16).toByteArray(); // returns leading zero for bit sign
+
+		assertTrue(Arrays.equals(cipher, ans));
 
 		plain = dc.decrypt(cipher);
-		System.out.println("Decrypted Ciphertext (hex): " + bytesToHex(plain));
+
+		System.out.println("Decrypted Ciphertext (hex): " + new BigInteger(1, plain).toString(16).toUpperCase());
 		System.out.println("Decrypted Ciphertext (ascii): " + new String(plain));
 
-		assertEquals(message, new String(plain), "Decrypted message does not match original");
+		assertEquals(message, new String(plain));
 	}
 
 	@Test
@@ -45,32 +47,44 @@ public class myDESCipherTest {
 		String key = "13579BDF02468ACE";
 		String iv = "A0A1A2A3A4A5A6A7";
 
-		// Generate key and IV bytes from hex strings
 		keybytes = new BigInteger(key, 16).toByteArray();
 		byte[] ivbytes = hextStringToByteArray(iv);
-		System.out.println("Key length: " + keybytes.length);
-		System.out.println("IV length:  " + ivbytes.length);
+		System.out.println("Key: " + key.length());
+		System.out.println("IVbytes:  " + iv.length());
 
 		String message = "Second Test";
 		System.out.println("Initial message: " + message);
 
 		myDESCipher dc = new myDESCipher(keybytes, ivbytes);
 		cipher = dc.encrypt(message.getBytes());
-		System.out.println("Encrypted message (hex): " + bytesToHex(cipher));
+		System.out.println("Encrypted message: " + new String(cipher));
 
-		byte[] leadingZero = new BigInteger("C9A476194958FB9716A59B869F5F4351", 16).toByteArray();
-		byte[] expected = Arrays.copyOfRange(leadingZero, 1, leadingZero.length);
+		byte[] leadingZero = new BigInteger("C9A476194958FB9716A59B869F5F4351", 16).toByteArray(); // returns leading
+																									// zero for bit sign
+		byte[] ans = Arrays.copyOfRange(leadingZero, 1, leadingZero.length);
 
-		assertTrue(Arrays.equals(cipher, expected), "Cipher does not match expected output");
+		assertTrue(Arrays.equals(cipher, ans));
 
 		plain = dc.decrypt(cipher);
-		System.out.println("Decrypted Ciphertext (hex): " + bytesToHex(plain));
+		System.out.println("Decrypted Ciphertext (hex): " + new BigInteger(1, plain).toString(16).toUpperCase());
 		System.out.println("Decrypted Ciphertext (ascii): " + new String(plain));
 
-		assertEquals(message, new String(plain), "Decrypted message does not match original");
+		assertEquals(message, new String(plain));
 	}
 
-	// Convert hex string to byte array
+	@Test
+	public void testDecryptCiphertext() {
+		System.out.println("============= DECRYPT TEST =============");
+		String hexCiphertext = "B4528C2E87081C4AD54A77EE912956AAD24CD1211E00623F";
+		byte[] ciphertext = hextStringToByteArray(hexCiphertext);
+		byte[] key = new BigInteger("13579BDF02468ACE", 16).toByteArray();
+
+		myDESCipher dc = new myDESCipher(key);
+		byte[] decryptedText = dc.decrypt(ciphertext);
+		System.out.println("Decrypted Text (hex): " + new BigInteger(1, decryptedText).toString(16).toUpperCase());
+		System.out.println("Decrypted Text (ascii): " + new String(decryptedText));
+	}
+
 	public static byte[] hextStringToByteArray(String s) {
 		int len = s.length();
 		byte[] data = new byte[len / 2];
@@ -81,12 +95,8 @@ public class myDESCipherTest {
 		return data;
 	}
 
-	// Convert byte array to hex string
-	public static String bytesToHex(byte[] bytes) {
-		StringBuilder sb = new StringBuilder();
-		for (byte b : bytes) {
-			sb.append(String.format("%02X", b));
-		}
-		return sb.toString();
+	public static void main(String[] args) {
+		org.junit.runner.JUnitCore.main("org.com2041.lab2.css1ss.myDESCipherTest");
 	}
+
 }

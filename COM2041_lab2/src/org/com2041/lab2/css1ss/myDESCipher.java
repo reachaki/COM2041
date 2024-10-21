@@ -11,12 +11,20 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.math.BigInteger;
 
 public class myDESCipher {
-	Cipher ecipher; // DES encryption cipher
-	Cipher dcipher; // DES decryption cipher
+	private Cipher ecipher; // DES encryption cipher
+	private Cipher dcipher; // DES decryption cipher
 
-	myDESCipher(byte[] keyBytes, byte[] ivBytes) {
+	public myDESCipher(byte[] keyBytes, byte[] ivBytes) {
+		if (keyBytes.length != 8) {
+			throw new IllegalArgumentException("Key must be 8 bytes long for DES.");
+		}
+		if (ivBytes.length != 8) {
+			throw new IllegalArgumentException("IV must be 8 bytes long for DES.");
+		}
+
 		SecretKey key = new SecretKeySpec(keyBytes, "DES");
 		IvParameterSpec iv = new IvParameterSpec(ivBytes);
 		try {
@@ -26,11 +34,15 @@ public class myDESCipher {
 			dcipher.init(Cipher.DECRYPT_MODE, key, iv);
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
 				| InvalidAlgorithmParameterException e) {
-			System.err.println("Cipher initialization error: " + e.getMessage());
+			throw new RuntimeException("Cipher initialization error: " + e.getMessage(), e);
 		}
 	}
 
-	myDESCipher(byte[] keybytes) {
+	public myDESCipher(byte[] keybytes) {
+		if (keybytes.length != 8) {
+			throw new IllegalArgumentException("Key must be 8 bytes long for DES.");
+		}
+
 		SecretKey key = new SecretKeySpec(keybytes, "DES");
 		try {
 			ecipher = Cipher.getInstance("DES/ECB/NoPadding");
@@ -38,27 +50,44 @@ public class myDESCipher {
 			ecipher.init(Cipher.ENCRYPT_MODE, key);
 			dcipher.init(Cipher.DECRYPT_MODE, key);
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
-			System.err.println("Cipher initialization error: " + e.getMessage());
+			throw new RuntimeException("Cipher initialization error: " + e.getMessage(), e);
 		}
 	}
 
 	public byte[] encrypt(byte[] databytes) {
-		byte[] enc = null;
 		try {
-			enc = ecipher.doFinal(databytes);
+			return ecipher.doFinal(databytes);
 		} catch (IllegalBlockSizeException | BadPaddingException e) {
-			System.err.println("Encryption error: " + e.getMessage());
+			throw new RuntimeException("Encryption error: " + e.getMessage(), e);
 		}
-		return enc != null ? enc : new byte[0]; // Return empty byte array on failure
 	}
 
 	public byte[] decrypt(byte[] databytes) {
-		byte[] dec = null;
 		try {
-			dec = dcipher.doFinal(databytes);
+			return dcipher.doFinal(databytes);
 		} catch (IllegalBlockSizeException | BadPaddingException e) {
-			System.err.println("Decryption error: " + e.getMessage());
+			throw new RuntimeException("Decryption error: " + e.getMessage(), e);
 		}
-		return dec != null ? dec : new byte[0]; // Return empty byte array on failure
+	}
+
+	public static void main(String[] args) {
+		// Example usage
+		String keyHex = "13579BDF02468ACE"; // Example key
+		byte[] key = new BigInteger(keyHex, 16).toByteArray();
+
+		// Ensure key length is correct (DES requires 8 bytes)
+		if (key.length != 8) {
+			key = new byte[] { 0, key[0], key[1], key[2], key[3], key[4], key[5], key[6] };
+		}
+
+		myDESCipher cipher = new myDESCipher(key);
+
+		String message = "Hello";
+		byte[] encrypted = cipher.encrypt(message.getBytes());
+
+		System.out.println("Encrypted Text (hex): " + new BigInteger(1, encrypted).toString(16).toUpperCase());
+
+		byte[] decrypted = cipher.decrypt(encrypted);
+		System.out.println("Decrypted Text (ascii): " + new String(decrypted));
 	}
 }
