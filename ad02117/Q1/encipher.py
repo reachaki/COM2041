@@ -11,8 +11,14 @@ def encipher(block,key):
     cipher = "0000"  # This is the expected output format: 4 consecutive digits
 
     # YOUR IMPLEMENTATION HERE
-    
-    return cipher  # This function must return a string of 4 consecutive digits
+    block = [int(digit) for digit in block]
+    permuted1 = [block[2], block[1], block[3], block[0]]
+    key1 = [int(k) for k in key[:4]]
+    added1 = [(permuted1[i] + key1[i]) % 10 for i in range(4)]
+    permuted2 = [added1[2], added1[1], added1[3], added1[0]]
+    key2 = [int(k) for k in key[4:]]
+    cipher = [(permuted2[i] + key2[i]) % 10 for i in range(4)]
+    return ''.join(map(str, cipher))  # This function must return a string of 4 consecutive digits
 
 # DO NOT CHANGE THIS LINE NOR ANYTHING BELOW THIS LINE
 

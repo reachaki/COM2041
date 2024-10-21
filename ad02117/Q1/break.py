@@ -5,14 +5,44 @@ import sys
 
 # DO NOT CHANGE THIS LINE NOR ANYTHING ABOVE THIS LINE
 
-# You can add functions here to support your implementation below
+def reverse_permutation(block):
+    return [block[3], block[1], block[0], block[2]]
 
-def breakcipher(block): # This function must return a string of 4 decimal digits
-    plaintext = "0000" 
+def encipher(block, key):
+    block = [int(digit) for digit in block]
+    key1 = [int(k) for k in key[:4]]
+    key2 = [int(k) for k in key[4:]]
 
-    # YOUR IMPLEMENTATION HERE
-    
-    return plaintext
+    permuted1 = [block[2], block[1], block[3], block[0]]
+    added1 = [(permuted1[i] + key1[i]) % 10 for i in range(4)]
+    permuted2 = [added1[2], added1[1], added1[3], added1[0]]
+    cipher = [(permuted2[i] + key2[i]) % 10 for i in range(4)]
+
+    return ''.join(map(str, cipher))
+
+def decrypt_message(ciphertext, key):
+    ciphertext = [int(digit) for digit in ciphertext]
+    key1 = [int(k) for k in key[:4]]
+    key2 = [int(k) for k in key[4:]]
+
+    subtracted2 = [(ciphertext[i] - key2[i]) % 10 for i in range(4)]
+    permuted2 = reverse_permutation(subtracted2)
+
+    subtracted1 = [(permuted2[i] - key1[i]) % 10 for i in range(4)]
+    decrypted = reverse_permutation(subtracted1)
+
+    return ''.join(map(str, decrypted))
+
+def breakcipher(ciphertext):
+    plaintext = "0123"  # Known plaintext for finding the key
+    known_ciphertext = "7468"  # Known ciphertext for finding the key
+
+    for k in range(100000000):  
+        key = f"{k:08d}"  
+        if encipher(plaintext, key) == known_ciphertext:
+            return decrypt_message(ciphertext, key)  # Return decrypted message using the found key
+
+    return "No key found"
 
 # DO NOT CHANGE THIS LINE NOR ANYTHING BELOW THIS LINE
 
