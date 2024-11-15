@@ -34,15 +34,17 @@ def decrypt_message(ciphertext, key):
     return ''.join(map(str, decrypted))
 
 def breakcipher(ciphertext):
-    plaintext = "0123"  # Known plaintext for finding the key
-    known_ciphertext = "7468"  # Known ciphertext for finding the key
+    plaintext = "0123"  # Known plaintext 
+    known_ciphertext = "7468"  # Known ciphertext 
 
-    for k in range(100000000):  
+    for k in range(1000000000):  
         key = f"{k:08d}"  
         if encipher(plaintext, key) == known_ciphertext:
+            print(f"Found key: {key}")  # Debugging output
             return decrypt_message(ciphertext, key)  # Return decrypted message using the found key
 
     return "No key found"
+
 
 # DO NOT CHANGE THIS LINE NOR ANYTHING BELOW THIS LINE
 
